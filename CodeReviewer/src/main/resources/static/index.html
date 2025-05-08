@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Code Review</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/cpp.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/typescript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/css.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #4d68ff;
+      --secondary-color: #6c757d;
+      --bg-dark: #1e1e2e;
+      --bg-light: #f8f9fa;
+      --text-light: #f8f9fa;
+      --text-dark: #212529;
+      --code-bg: #282c34;
+      --review-bg: #f0f4f8;
+      --hover-color: #3a50d9;
+      --danger-color: #dc3545;
+      --success-color: #28a745;
+      --warning-color: #fd7e14;
+      --info-color: #17a2b8;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --border-radius: 8px;
+      --transition: all 0.3s ease;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-dark);
+      overflow: hidden;
+    }
+
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+	.navbar {
+	  display: flex;
+	  justify-content: space-between;
+	  align-items: center;
+	  background-color: var(--primary-color);
+	  color: var(--text-light);
+	  padding: 0.5rem 1rem;
+	  box-shadow: var(--shadow);
+	  z-index: 100;
+	}
+
+	.navbar-left,
+	.navbar-center,
+	.navbar-right {
+	  display: flex;
+	  align-items: center;
+	  gap: 0.5rem;
+	}
+	
+	.navbar-tagline {
+	  font-size: 1rem;
+	  font-weight: 500;
+	  margin-left: 10px;
+	}
+
+	.navbar-brand {
+	  display: flex;
+	  align-items: center;
+	  gap: 0.5rem;
+	  font-size: 1.5rem;
+	  font-weight: bold;
+	}
+
+	.theme-toggle {
+	  background: none;
+	  border: none;
+	  color: var(--text-light);
+	  font-size: 1.2rem;
+	  cursor: pointer;
+	  transition: var(--transition);
+	}
+
+    .theme-toggle {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--text-light);
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .theme-toggle:hover {
+      transform: rotate(30deg);
+    }
+
+    .main-content {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .code-panel, .review-panel {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      padding: 1rem;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .panel-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+    }
+
+    .panel-title i {
+      margin-right: 0.5rem;
+    }
+
+    .panel-controls {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+    }
+
+    .file-input-wrapper input[type=file] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      cursor: pointer;
+      height: 100%;
+      width: 100%;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: var(--border-radius);
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: var(--text-light);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--hover-color);
+    }
+
+    .btn-secondary {
+      background-color: var(--secondary-color);
+      color: var(--text-light);
+    }
+
+    .btn-secondary:hover {
+      background-color: #5a6268;
+    }
+
+    .btn-danger {
+      background-color: var(--danger-color);
+      color: var(--text-light);
+    }
+
+    .btn-danger:hover {
+      background-color: #bd2130;
+    }
+
+    .btn-success {
+      background-color: var(--success-color);
+      color: var(--text-light);
+    }
+
+    .btn-success:hover {
+      background-color: #218838;
+    }
+
+    .btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .code-editor-container, .review-content {
+      flex: 1;
+      overflow: hidden;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+    }
+
+    .code-editor {
+      width: 100%;
+      height: 100%;
+      padding: 1rem;
+      font-family: 'Fira Code', Consolas, Monaco, 'Andale Mono', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      border: none;
+      background-color: var(--code-bg);
+      color: var(--text-light);
+      resize: none;
+      border-radius: var(--border-radius);
+      tab-size: 4;
+    }
+
+    .code-editor:focus {
+      outline: none;
+    }
+
+    .review-content {
+      background-color: var(--review-bg);
+      padding: 1rem;
+      overflow-y: auto;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+    }
+    
+    .review-content h3 {
+      color: var(--primary-color);
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 0.5rem;
+      margin-top: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .review-content h4 {
+      color: var(--hover-color);
+      margin-top: 1.25rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .review-content ul {
+      padding-left: 1.5rem;
+    }
+    
+    .review-content li {
+      margin-bottom: 0.5rem;
+    }
+    
+    .review-content strong {
+      color: var(--hover-color);
+      font-weight: 600;
+    }
+    
+    .review-content pre {
+      background-color: var(--code-bg);
+      border-radius: var(--border-radius);
+      padding: 1rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    
+    .review-content code {
+      font-family: 'Fira Code', Consolas, monospace;
+      font-size: 0.9rem;
+    }
+    
+    .review-content p {
+      margin-bottom: 1rem;
+    }
+    
+    .review-content .error-message {
+      color: var(--danger-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+    }
+
+    .footer {
+      background-color: var(--bg-dark);
+      color: var(--text-light);
+      padding: 0.5rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-status {
+      font-size: 0.9rem;
+    }
+
+    .footer-actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .language-selector {
+      padding: 0.5rem;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--secondary-color);
+      background-color: var(--bg-light);
+      color: var(--text-dark);
+    }
+
+    .resizer {
+      width: 6px;
+      background-color: #ddd;
+      cursor: col-resize;
+      transition: background-color 0.3s;
+    }
+
+    .resizer:hover {
+      background-color: var(--primary-color);
+    }
+
+    body.dark-mode {
+      --bg-light: #121212;
+      --text-dark: #f8f9fa;
+      --review-bg: #1e1e2e;
+      --secondary-color: #adb5bd;
+    }
+
+    body.dark-mode .review-content pre,
+    body.dark-mode .review-content code {
+      background-color: #1a1a1a !important;
+      color: #e0e0e0 !important;
+    }
+
+    body.dark-mode .review-content .hljs {
+      background-color: #1a1a1a !important;
+      color: #e0e0e0 !important;
+    }
+
+    body.dark-mode .code-editor {
+      color: #f8f9fa;
+    }
+
+    body.dark-mode .review-content {
+      color: #f8f9fa;
+    }
+
+    body.dark-mode .language-selector {
+      background-color: #2d2d2d;
+      color: #f8f9fa;
+      border-color: #666;
+    }
+
+    .loading-indicator {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--primary-color);
+      font-weight: 500;
+    }
+
+    .loading-indicator.active {
+      display: flex;
+    }
+
+    .spinner {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .main-content {
+        flex-direction: column;
+      }
+      
+      .resizer {
+        width: 100%;
+        height: 6px;
+        cursor: row-resize;
+      }
+    }
+	
+	@media (max-width: 768px) {
+	  .navbar {
+	    flex-direction: column;
+	    padding: 0.5rem;
+	  }
+	  
+	  .navbar-left,
+	  .navbar-center,
+	  .navbar-right {
+	    width: 100%;
+	    justify-content: center;
+	    padding: 0.25rem 0;
+	  }
+	  
+	  .navbar-tagline {
+	    display: none;
+	  }
+	}
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--secondary-color);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary-color);
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: var(--border-radius);
+      color: white;
+      box-shadow: var(--shadow);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+      transform: translateX(120%);
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .notification-success {
+      background-color: var(--success-color);
+    }
+
+    .notification-error {
+      background-color: var(--danger-color);
+    }
+
+    .notification-info {
+      background-color: var(--info-color);
+    }
+
+    .notification-warning {
+      background-color: var(--warning-color);
+    }
+
+    .line-numbers {
+      padding-right: 10px;
+      text-align: right;
+      color: var(--secondary-color);
+      user-select: none;
+      border-right: 1px solid #444;
+    }
+	
+	.logo-container {
+	  background-color: white;
+	  padding: 0.3rem 1rem;
+	  border-radius: 30px;
+	  display: flex;
+	  align-items: center;
+	  gap: 0.8rem;
+	  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+	  margin: 0 auto;
+	  position: relative;
+	  z-index: 10;
+	  transition: all 0.3s ease;
+	}
+
+	.navbar-logo {
+	  height: 40px;
+	  width: auto;
+	  object-fit: contain;
+	}
+
+	.logo-title {
+	  color: var(--primary-color);
+	  font-weight: 600;
+	  font-size: 1rem;
+	  white-space: nowrap;
+	}
+
+	.logo-container:hover {
+	  transform: scale(1.03);
+	  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+	}
+
+	body.dark-mode .logo-container {
+	  background-color: #f0f0f0;
+	}
+
+	@media (max-width: 768px) {
+	  .logo-container {
+	    padding: 0.2rem 0.8rem;
+	    margin: 0.5rem auto;
+	  }
+	  
+	  .logo-title {
+	    font-size: 0.9rem;
+	  }
+	  
+	  .navbar-logo {
+	    height: 28px;
+	  }
+	}
+  </style>
+</head>
+<body>
+  <div class="app-container">
+	<nav class="navbar">
+	  <div class="navbar-left">
+	    <i class="fas fa-code"></i>
+	    <span>AI Code Review</span>
+	  </div>
+	  
+	  <div class="logo-container">
+	    <img src="../images/yonder_hackathon_logo.svg" alt="Logo" class="navbar-logo">
+	    <!-- <span class="logo-title">Hackathon 2025</span> -->
+	  </div>
+	  
+	  <div class="navbar-right">
+	    <button class="theme-toggle" id="themeToggle" aria-label="Toggle Theme">
+	      <i class="fas fa-moon"></i>
+	    </button>
+	  </div>
+	</nav>
+
+    <div class="main-content">
+      <div class="code-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i class="fas fa-code"></i>
+            Source Code
+          </div>
+          <div class="panel-controls">
+            <div class="file-input-wrapper">
+              <button class="btn btn-secondary">
+                <i class="fas fa-file-upload"></i>
+                Upload
+              </button>
+              <input type="file" id="fileInput" accept=".txt,.js,.py,.java,.cpp,.ts,.html,.css" />
+            </div>
+            <button class="btn btn-danger" id="clearBtn">
+              <i class="fas fa-trash"></i>
+              Clear
+            </button>
+            <select class="language-selector" id="languageSelector">
+              <option value="java">Java</option>
+              <option value="javascript">JavaScript</option>
+              <option value="python">Python</option>
+              <option value="cpp">C++</option>
+              <option value="typescript">TypeScript</option>
+              <option value="html">HTML</option>
+              <option value="css">CSS</option>
+            </select>
+          </div>
+        </div>
+        <div class="code-editor-container">
+          <textarea id="codeInput" class="code-editor" placeholder="Enter your code here..."></textarea>
+        </div>
+      </div>
+
+      <div class="resizer" id="resizer"></div>
+      
+      <div class="review-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <i class="fas fa-clipboard-check"></i>
+            Review Results
+          </div>
+          <div class="panel-controls">
+            <button class="btn btn-success" id="copyBtn">
+              <i class="fas fa-copy"></i>
+              Copy
+            </button>
+            <button class="btn btn-secondary" id="saveBtn">
+              <i class="fas fa-download"></i>
+              Save
+            </button>
+          </div>
+        </div>
+        <div class="review-content" id="output"></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-status">
+        <span id="statusText">Ready</span>
+        <div class="loading-indicator" id="loadingIndicator">
+          <i class="fas fa-spinner spinner"></i>
+          Processing...
+        </div>
+      </div>
+      <div class="footer-actions">
+        <button class="btn btn-primary" id="submitButton">
+          <i class="fas fa-play"></i>
+          Review Code
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="notification" id="notification">
+    <i class="fas fa-info-circle"></i>
+    <span id="notificationText"></span>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+  <script>
+    // Wait for all scripts to load
+    window.onload = function() {
+      hljs.configure({
+        languages: ['java', 'javascript', 'python', 'cpp', 'typescript', 'html', 'css']
+      });
+    };
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      const codeInput = document.getElementById('codeInput');
+      const fileInput = document.getElementById('fileInput');
+      const clearBtn = document.getElementById('clearBtn');
+      const copyBtn = document.getElementById('copyBtn');
+      const saveBtn = document.getElementById('saveBtn');
+      const submitButton = document.getElementById('submitButton');
+      const outputEl = document.getElementById('output');
+      const languageSelector = document.getElementById('languageSelector');
+      const themeToggle = document.getElementById('themeToggle');
+      const loadingIndicator = document.getElementById('loadingIndicator');
+      const statusText = document.getElementById('statusText');
+      const notification = document.getElementById('notification');
+      const notificationText = document.getElementById('notificationText');
+      const resizer = document.getElementById('resizer');
+
+	  marked.setOptions({
+	      highlight: function(code, lang) {
+	          if (lang && hljs.getLanguage(lang)) {
+	              return hljs.highlight(code, { language: lang }).value;
+	          }
+	          return hljs.highlightAuto(code).value;
+	      },
+	      breaks: true,
+	      gfm: true,
+	      langPrefix: 'hljs language-', // This helps with syntax highlighting
+	      pedantic: false,
+	      smartLists: true,
+	      smartypants: false
+	  });
+	  
+	  function preprocessMarkdown(text) {
+	      return text.replace(/(```)(\w*)([\s\S]*?)(```)/g, function(match, opening, lang, content, closing) {
+	          // Ensure content starts and ends with newlines
+	          if (!content.startsWith('\n')) content = '\n' + content;
+	          if (!content.endsWith('\n')) content = content + '\n';
+	          return opening + lang + content + closing;
+	      });
+	  }
+
+	  // Update the processReviewOutput
+	  function processReviewOutput(text) {
+	      text = preprocessMarkdown(text);
+	      return marked.parse(text);
+	  }
+
+      // Initialize the code editor with the previously selected language
+      const savedLanguage = localStorage.getItem('selectedLanguage') || 'java';
+      languageSelector.value = savedLanguage;
+
+      // Dark mode toggle
+      themeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        localStorage.setItem('darkMode', isDarkMode);
+        themeToggle.innerHTML = isDarkMode ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        
+        // Re-apply syntax highlighting to ensure proper color scheme
+        if (outputEl.innerHTML) {
+          outputEl.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+          });
+        }
+      });
+
+      // Check for saved dark mode preference
+      if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+      }
+
+      // File upload
+      fileInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          codeInput.value = e.target.result;
+          
+          // Auto-detect language from file extension
+          const extension = file.name.split('.').pop().toLowerCase();
+          const extensionToLanguage = {
+            'java': 'java',
+            'js': 'javascript',
+            'py': 'python',
+            'cpp': 'cpp',
+            'ts': 'typescript',
+            'html': 'html',
+            'css': 'css',
+            'txt': 'plaintext'
+          };
+          
+          if (extensionToLanguage[extension]) {
+            languageSelector.value = extensionToLanguage[extension];
+            localStorage.setItem('selectedLanguage', extensionToLanguage[extension]);
+          }
+          
+          showNotification('File loaded successfully!', 'success');
+        };
+        reader.readAsText(file);
+      });
+
+      // Clear code
+      clearBtn.addEventListener('click', () => {
+        if (codeInput.value) {
+          if (confirm('Are you sure you want to clear the code?')) {
+            codeInput.value = '';
+            showNotification('Code cleared!', 'info');
+          }
+        }
+      });
+
+      // Copy review results
+      copyBtn.addEventListener('click', () => {
+        if (outputEl.innerHTML) {
+          // Create a temporary element to hold the plain text
+          const tempEl = document.createElement('div');
+          tempEl.innerHTML = outputEl.innerHTML;
+          
+          // Get text content (preserving line breaks and formatting)
+          const plainText = tempEl.innerText;
+          
+          navigator.clipboard.writeText(plainText)
+            .then(() => showNotification('Review copied to clipboard!', 'success'))
+            .catch(() => showNotification('Failed to copy review', 'error'));
+        } else {
+          showNotification('No review content to copy', 'warning');
+        }
+      });
+
+      // Save review as file
+      saveBtn.addEventListener('click', () => {
+        if (outputEl.innerHTML) {
+          // Get the text content (preserving formatting)
+          const plainText = outputEl.innerText;
+          
+          const blob = new Blob([plainText], {type: 'text/plain'});
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'code-review-' + new Date().toISOString().slice(0,10) + '.md';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          showNotification('Review saved as file!', 'success');
+        } else {
+          showNotification('No review content to save', 'warning');
+        }
+      });
+
+      // Language selection
+      languageSelector.addEventListener('change', (e) => {
+        localStorage.setItem('selectedLanguage', e.target.value);
+      });
+
+	  // Resizable panels
+	  let isResizing = false;
+	  let lastX = 0;
+	  let startWidth = 0;
+
+	  resizer.addEventListener('mousedown', (e) => {
+	    isResizing = true;
+	    lastX = e.clientX;
+	    
+	    // Store initial widths
+	    const codePanel = document.querySelector('.code-panel');
+	    startWidth = codePanel.getBoundingClientRect().width;
+	    
+	    // Add events to document so dragging works even if mouse leaves the resizer
+	    document.addEventListener('mousemove', handleMouseMove);
+	    document.addEventListener('mouseup', stopResizing);
+	    
+	    // Prevent text selection during resize
+	    document.body.style.userSelect = 'none';
+	    document.body.style.cursor = 'col-resize';
+	    
+	    // Prevent default behaviors
+	    e.preventDefault();
+	  });
+
+	  function handleMouseMove(e) {
+	    if (!isResizing) return;
+	    
+	    const container = document.querySelector('.main-content');
+	    const codePanel = document.querySelector('.code-panel');
+	    const reviewPanel = document.querySelector('.review-panel');
+	    
+	    // Calculate new width based on mouse movement
+	    const dx = e.clientX - lastX;
+	    const newWidth = startWidth + dx;
+	    
+	    // Convert to percentage of container width
+	    const containerWidth = container.getBoundingClientRect().width;
+	    const newWidthPercent = (newWidth / containerWidth) * 100;
+	    
+	    // Apply minimum width constraints (20%)
+	    if (newWidthPercent >= 20 && newWidthPercent <= 80) {
+	      codePanel.style.width = `${newWidthPercent}%`;
+	      codePanel.style.flex = 'none'; // Override flex property
+	      reviewPanel.style.flex = '1'; // Let review panel take remaining space
+	    }
+	  }
+
+	  function stopResizing() {
+	    isResizing = false;
+	    document.removeEventListener('mousemove', handleMouseMove);
+	    document.removeEventListener('mouseup', stopResizing);
+	    document.body.style.userSelect = '';
+	    document.body.style.cursor = '';
+	  }
+	  
+      // Show notification
+      function showNotification(message, type = 'info') {
+        notification.className = 'notification';
+        notification.classList.add(`notification-${type}`);
+        notificationText.textContent = message;
+        notification.classList.add('show');
+        
+        setTimeout(() => {
+          notification.classList.remove('show');
+        }, 3000);
+
+        // Set appropriate icon based on notification type
+        const iconMap = {
+          'success': 'fa-check-circle',
+          'error': 'fa-exclamation-circle',
+          'warning': 'fa-exclamation-triangle',
+          'info': 'fa-info-circle'
+        };
+        
+        const iconElement = notification.querySelector('i');
+        iconElement.className = `fas ${iconMap[type]}`;
+      }
+
+      // Process the review output to highlight code blocks and format markdown
+	  function processReviewOutput(text) {
+	      // Normalize code block endings - ensure they're on their own line
+	      text = text.replace(/```(\w+)?([^`]*)```/gs, function(match, lang, code) {
+	          // If the code block isn't properly formatted, fix it
+	          if (!code.startsWith('\n')) code = '\n' + code;
+	          if (!code.endsWith('\n')) code = code + '\n';
+	          return '```' + (lang || '') + code + '```';
+	      });
+
+	      // Convert markdown to HTML
+	      const html = marked.parse(text);
+	      return html;
+	  }
+	  
+	  async function startReview() {
+	      const code = codeInput.value.trim();
+	      
+	      if (!code) {
+	          showNotification('Please enter some code to review', 'warning');
+	          return;
+	      }
+
+	      outputEl.innerHTML = '';
+	      submitButton.disabled = true;
+	      loadingIndicator.classList.add('active');
+	      statusText.style.display = 'none';
+
+	      // Track scroll position
+	      let userScrolledUp = false;
+	      let lastScrollPosition = outputEl.scrollTop;
+	      let lastScrollHeight = outputEl.scrollHeight;
+
+	      // Check if user scrolls up
+	      outputEl.addEventListener('scroll', function() {
+	          const isNearBottom = outputEl.scrollTop + outputEl.clientHeight >= outputEl.scrollHeight - 50;
+	          userScrolledUp = !isNearBottom;
+	          lastScrollPosition = outputEl.scrollTop;
+	      });
+
+	      try {
+	          const response = await fetch('/stream-review', {
+	              method: 'POST',
+	              headers: { 'Content-Type': 'application/json' },
+	              body: JSON.stringify(code)
+	          });
+
+	          if (!response.ok || !response.body) {
+	              throw new Error('Error submitting code.');
+	          }
+
+	          const reader = response.body.getReader();
+	          const decoder = new TextDecoder();
+	          let completeResponse = '';
+
+			  // Streaming loop
+			  while (true) {
+			      const { value, done } = await reader.read();
+			      if (done) break;
+			      const chunk = decoder.decode(value, { stream: true });
+			      completeResponse += chunk;
+			      
+			      // Process and display the current accumulated output
+			      outputEl.innerHTML = processReviewOutput(completeResponse);
+			      
+			      // Apply syntax highlighting to all code blocks
+			      document.querySelectorAll('pre code').forEach((block) => {
+			          // Only highlight if not already highlighted
+			          if (!block.classList.contains('hljs')) {
+			              hljs.highlightElement(block);
+			          }
+			      });
+			      
+			      // Scroll logic remains the same
+			      const isNearBottom = outputEl.scrollTop + outputEl.clientHeight >= lastScrollHeight - 50;
+			      if (!userScrolledUp || isNearBottom) {
+			          outputEl.scrollTop = outputEl.scrollHeight;
+			      }
+			      
+			      lastScrollHeight = outputEl.scrollHeight;
+			  }
+	          
+	          // Final processing
+	          outputEl.innerHTML = processReviewOutput(completeResponse);
+	          outputEl.querySelectorAll('pre code').forEach((block) => {
+	              hljs.highlightElement(block);
+	          });
+	          
+	          showNotification('Code review completed!', 'success');
+	      } catch (error) {
+	          outputEl.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-circle"></i> Error: ${error.message}</div>`;
+	          showNotification('Error occurred during review', 'error');
+	      } finally {
+	          submitButton.disabled = false;
+	          loadingIndicator.classList.remove('active');
+	          statusText.style.display = 'inline';
+	          statusText.textContent = 'Ready';
+	          outputEl.removeEventListener('scroll', function() {});
+	      }
+	  }
+	  
+      submitButton.addEventListener('click', startReview);
+      codeInput.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 'Enter') {
+          startReview();
+        }
+      });
+
+      setTimeout(() => {
+        showNotification('Welcome to AI Code Review!', 'info');
+      }, 500);
+    });
+  </script>
+</body>
+</html>	

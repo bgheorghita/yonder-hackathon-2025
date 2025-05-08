@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 320 60" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background shape -->
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3498db" />
+      <stop offset="100%" stop-color="#9b59b6" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main logo container -->
+  <g>
+    <!-- "yonder" text with specific colors -->
+    <text x="10" y="35" font-family="Arial, sans-serif" font-weight="bold" font-size="24">
+      <tspan fill="#e12486">yon</tspan><tspan fill="#055199">der</tspan>
+    </text>
+    
+    <!-- Decorative code brackets -->
+    <text x="102" y="35" font-family="monospace" font-weight="bold" font-size="26" fill="url(#logoGradient)">
+      {
+    </text>
+    
+    <!-- "Hackathon 2025" text -->
+    <text x="120" y="35" font-family="Arial, sans-serif" font-size="18" fill="#555">
+      HACKATHON 2025
+    </text>
+    
+    <text x="280" y="35" font-family="monospace" font-weight="bold" font-size="26" fill="url(#logoGradient)">
+      }
+    </text>
+    
+    <!-- Decorative elements - binary pattern -->
+    <text x="15" y="50" font-family="monospace" font-size="6" fill="#888" opacity="0.5">
+      10101 01010 10101 01010 10101 01010 10101 01010
+    </text>
+    
+    <!-- Location indicator -->
+    <text x="260" y="50" font-family="Arial, sans-serif" font-size="7" fill="#888" text-anchor="end">
+      IAȘI, ROMANIA
+    </text>
+    
+    <!-- Abstract circuit lines -->
+    <path d="M5,5 L15,5 L15,10" stroke="#3498db" stroke-width="1" fill="none" opacity="0.6"/>
+    <path d="M305,5 L295,5 L295,10" stroke="#9b59b6" stroke-width="1" fill="none" opacity="0.6"/>
+    <path d="M5,55 L15,55 L15,50" stroke="#3498db" stroke-width="1" fill="none" opacity="0.6"/>
+    <path d="M305,55 L295,55 L295,50" stroke="#9b59b6" stroke-width="1" fill="none" opacity="0.6"/>
+  </g>
+</svg>
